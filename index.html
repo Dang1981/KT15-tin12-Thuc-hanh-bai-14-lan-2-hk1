@@ -1,0 +1,2233 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kiểm Tra Thường Xuyên (Tự Luận) - Tin Học 12</title>
+  <!-- Font chữ Inter chuẩn giao diện hiện đại, tối ưu hiển thị tiếng Việt -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- Thư viện SheetJS đọc và xuất trực tiếp file Excel (.xlsx) -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <style>
+    /* ==========================================================================
+       1. BIẾN MÀU SẮC & THIẾT LẬP CHUNG (CSS THUẦN ĐỘC LẬP)
+       ========================================================================== */
+    :root {
+      --primary: #1d4ed8;
+      --primary-hover: #1e40af;
+      --primary-light: #eff6ff;
+      --primary-border: #bfdbfe;
+      --secondary: #0f766e;
+      --secondary-light: #f0fdfa;
+      --danger: #dc2626;
+      --danger-light: #fef2f2;
+      --danger-border: #fecaca;
+      --warning: #d97706;
+      --warning-light: #fffbeb;
+      --success: #15803d;
+      --success-light: #f0fdf4;
+      --bg-body: #f1f5f9;
+      --bg-card: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --border-color: #cbd5e1;
+      --radius-lg: 14px;
+      --radius-md: 10px;
+      --radius-sm: 6px;
+      --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.08);
+      --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
+      --shadow-lg: 0 12px 28px rgba(15, 23, 42, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-body);
+      color: var(--text-main);
+      line-height: 1.55;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      user-select: none; /* Chống bôi đen sao chép đề thi */
+      -webkit-user-select: none;
+    }
+
+    /* Cho phép chọn/nhập trong vùng soạn thảo */
+    textarea, input, select {
+      user-select: text;
+      -webkit-user-select: text;
+      font-family: inherit;
+    }
+
+    /* ==========================================================================
+       2. HEADER THÔNG TIN TRƯỜNG & GIÁO VIÊN
+       ========================================================================== */
+    .app-header {
+      background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 60%, #0284c7 100%);
+      color: #ffffff;
+      padding: 16px 20px;
+      box-shadow: var(--shadow-md);
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+
+    .header-inner {
+      max-width: 1120px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .header-title-group h1 {
+      font-size: clamp(1.05rem, 2.5vw, 1.4rem);
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    .header-title-group p {
+      font-size: 0.9rem;
+      color: #dbeafe;
+      font-weight: 500;
+      margin-top: 2px;
+    }
+
+    .status-badges {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.16);
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+    }
+
+    .badge-timer {
+      background: #fef08a;
+      color: #854d0e;
+      border-color: #fde047;
+      font-variant-numeric: tabular-nums;
+      font-size: 0.95rem;
+    }
+
+    .badge-timer.danger {
+      background: #fee2e2;
+      color: #b91c1c;
+      border-color: #fca5a5;
+      animation: pulse 1s infinite;
+    }
+
+    .badge-violation {
+      background: rgba(220, 38, 38, 0.9);
+      color: #ffffff;
+      border-color: #fca5a5;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.04); }
+    }
+
+    /* ==========================================================================
+       3. CONTAINER & CARDS
+       ========================================================================== */
+    .container {
+      max-width: 1120px;
+      width: 100%;
+      margin: 20px auto;
+      padding: 0 16px 40px;
+      flex: 1;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid #e2e8f0;
+      padding: 22px;
+      margin-bottom: 20px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding-bottom: 14px;
+      margin-bottom: 18px;
+      border-bottom: 2px solid #f1f5f9;
+    }
+
+    .card-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* ==========================================================================
+       4. MÀN HÌNH ĐĂNG NHẬP & CHỌN LỚP / ĐỀ THI
+       ========================================================================== */
+    .setup-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 11px 14px;
+      font-size: 0.95rem;
+      border: 1.5px solid var(--border-color);
+      border-radius: var(--radius-md);
+      background-color: #ffffff;
+      color: var(--text-main);
+      transition: all 0.2s;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.15);
+    }
+
+    .form-control:disabled {
+      background-color: #f1f5f9;
+      color: #94a3b8;
+      cursor: not-allowed;
+    }
+
+    /* Hộp nạp file Excel thủ công / trạng thái nạp danh sách */
+    .roster-status-box {
+      background: var(--primary-light);
+      border: 1px dashed var(--primary);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 0.88rem;
+    }
+
+    .roster-info {
+      color: #1e3a8a;
+      flex: 1;
+      min-width: 240px;
+    }
+
+    /* Thẻ chọn Đề 1 / Đề 2 */
+    .exam-choice-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      margin-top: 8px;
+    }
+
+    .exam-option {
+      border: 2px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #ffffff;
+      position: relative;
+    }
+
+    .exam-option:hover {
+      border-color: #93c5fd;
+      background: #f8fafc;
+    }
+
+    .exam-option.selected {
+      border-color: var(--primary);
+      background: var(--primary-light);
+      box-shadow: 0 4px 12px rgba(29, 78, 216, 0.12);
+    }
+
+    .exam-option-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: var(--primary);
+      margin-bottom: 6px;
+    }
+
+    .exam-option p {
+      font-size: 0.86rem;
+      color: var(--text-muted);
+    }
+
+    /* Hộp quy chế chống gian lận */
+    .rules-box {
+      background: var(--warning-light);
+      border: 1px solid #fde68a;
+      border-radius: var(--radius-md);
+      padding: 14px 18px;
+      margin: 20px 0;
+      font-size: 0.88rem;
+      color: #92400e;
+    }
+
+    .rules-box ul {
+      margin-left: 20px;
+      margin-top: 6px;
+    }
+
+    .rules-box li {
+      margin-bottom: 4px;
+    }
+
+    /* ==========================================================================
+       5. BUTTONS
+       ========================================================================== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 11px 20px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border-radius: var(--radius-md);
+      border: none;
+      cursor: pointer;
+      transition: all 0.18s;
+      text-decoration: none;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(29, 78, 216, 0.25);
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(21, 128, 61, 0.25);
+    }
+
+    .btn-success:hover {
+      background: #166534;
+    }
+
+    .btn-outline {
+      background: #ffffff;
+      color: var(--primary);
+      border: 1.5px solid var(--primary);
+    }
+
+    .btn-outline:hover {
+      background: var(--primary-light);
+    }
+
+    .btn-sm {
+      padding: 7px 13px;
+      font-size: 0.84rem;
+    }
+
+    .btn-lg {
+      padding: 14px 28px;
+      font-size: 1.05rem;
+      width: 100%;
+    }
+
+    /* ==========================================================================
+       6. MÀN HÌNH LÀM BÀI THI & THANH GỢI Ý BẤM NHANH (QUICK-INSERT)
+       ========================================================================== */
+    .student-banner {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      margin-bottom: 18px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.92rem;
+    }
+
+    .question-box {
+      background: #f8fafc;
+      border-left: 4px solid var(--primary);
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+
+    .question-title {
+      font-weight: 700;
+      font-size: 1.02rem;
+      color: #1e3a8a;
+      margin-bottom: 8px;
+    }
+
+    .code-snippet {
+      font-family: 'JetBrains Mono', monospace;
+      background: #1e293b;
+      color: #f8fafc;
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 0.9rem;
+      margin: 10px 0;
+      overflow-x: auto;
+      line-height: 1.5;
+    }
+
+    .question-list {
+      margin-left: 20px;
+      margin-top: 6px;
+      font-size: 0.94rem;
+    }
+
+    /* Thanh gợi ý bấm nhanh (Quick-Insert Toolbar) */
+    .quick-toolbar {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-bottom: none;
+      border-radius: var(--radius-md) var(--radius-md) 0 0;
+      padding: 10px 12px;
+    }
+
+    .quick-toolbar-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .chip-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .chip-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .chip-btn {
+      font-family: 'JetBrains Mono', 'Inter', monospace;
+      font-size: 0.82rem;
+      font-weight: 500;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #0f172a;
+      cursor: pointer;
+      transition: all 0.12s;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+      touch-action: manipulation;
+    }
+
+    .chip-btn:hover {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .chip-btn:active {
+      background: var(--primary);
+      color: #ffffff;
+      transform: translateY(1px);
+    }
+
+    /* Phân màu nhóm nút CSS */
+    .chip-tag {
+      background: #eff6ff;
+      border-color: #93c5fd;
+      color: #1d4ed8;
+      font-weight: 600;
+    }
+
+    .chip-prop {
+      background: #f0fdf4;
+      border-color: #86efac;
+      color: #15803d;
+    }
+
+    .chip-val {
+      background: #fefce8;
+      border-color: #fde047;
+      color: #854d0e;
+    }
+
+    .chip-sym {
+      background: #f3e8ff;
+      border-color: #d8b4fe;
+      color: #6b21a8;
+      font-weight: 700;
+    }
+
+    .chip-action {
+      background: #fee2e2;
+      border-color: #fca5a5;
+      color: #b91c1c;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+    }
+
+    .answer-textarea {
+      width: 100%;
+      min-height: 120px;
+      padding: 14px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 0 0 var(--radius-md) var(--radius-md);
+      font-size: 0.98rem;
+      line-height: 1.6;
+      resize: vertical;
+      background: #ffffff;
+      color: #0f172a;
+    }
+
+    .answer-textarea.code-editor {
+      font-family: 'JetBrains Mono', monospace;
+      min-height: 200px;
+      background: #0f172a;
+      color: #e2e8f0;
+      border-color: #334155;
+      tab-size: 2;
+    }
+
+    .answer-textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.15);
+    }
+
+    /* ==========================================================================
+       7. MÀN HÌNH KẾT QUẢ & PHIẾU ĐIỂM CHI TIẾT
+       ========================================================================== */
+    .score-hero {
+      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+      border: 2px solid #93c5fd;
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .score-numbers {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 24px;
+      flex-wrap: wrap;
+      margin: 14px 0;
+    }
+
+    .score-box {
+      background: #ffffff;
+      padding: 14px 26px;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid #bfdbfe;
+    }
+
+    .score-box .label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .score-box .val {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--primary);
+      line-height: 1.2;
+    }
+
+    .score-box.sub-score .val {
+      font-size: 1.45rem;
+      color: var(--secondary);
+    }
+
+    .rubric-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      font-size: 0.9rem;
+    }
+
+    .rubric-table th, .rubric-table td {
+      border: 1px solid #cbd5e1;
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .rubric-table th {
+      background: #f1f5f9;
+      font-weight: 700;
+      color: #1e293b;
+    }
+
+    .point-ok {
+      color: var(--success);
+      font-weight: 700;
+    }
+
+    .point-partial {
+      color: var(--warning);
+      font-weight: 700;
+    }
+
+    .point-zero {
+      color: var(--danger);
+      font-weight: 700;
+    }
+
+    /* ==========================================================================
+       8. MODAL CẢNH BÁO GIAN LẬN / XÁC NHẬN (THAY THẾ ALERT/CONFIRM)
+       ========================================================================== */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(3px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 100;
+    }
+
+    .modal-box {
+      background: #ffffff;
+      border-radius: var(--radius-lg);
+      max-width: 460px;
+      width: 100%;
+      padding: 24px;
+      box-shadow: var(--shadow-lg);
+      text-align: center;
+      animation: popIn 0.2s ease-out;
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.92); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-icon {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      margin: 0 auto 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      font-weight: 800;
+    }
+
+    .modal-icon.danger {
+      background: var(--danger-light);
+      color: var(--danger);
+      border: 2px solid var(--danger-border);
+    }
+
+    .modal-icon.info {
+      background: var(--primary-light);
+      color: var(--primary);
+      border: 2px solid var(--primary-border);
+    }
+
+    .modal-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .modal-body {
+      font-size: 0.93rem;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    /* Toast thông báo nhỏ góc màn hình */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #1e293b;
+      color: #ffffff;
+      padding: 12px 18px;
+      border-radius: var(--radius-md);
+      font-size: 0.88rem;
+      font-weight: 500;
+      box-shadow: var(--shadow-lg);
+      z-index: 90;
+      transition: opacity 0.3s, transform 0.3s;
+    }
+
+    .toast.danger {
+      background: #b91c1c;
+    }
+
+    @media (max-width: 640px) {
+      .card { padding: 16px; }
+      .chip-btn { padding: 7px 9px; font-size: 0.8rem; }
+      .score-box { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ========================================================================
+       HEADER THÔNG TIN KỲ KIỂM TRA
+       ======================================================================== -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="header-title-group">
+        <h1>KIỂM TRA THƯỜNG XUYÊN (TỰ LUẬN) - TIN HỌC 12</h1>
+        <p>Giáo viên: Nguyễn Hoàng Hải Đăng - Trường THPT Bình Tân | Bài 14: Định dạng văn bản bằng CSS</p>
+      </div>
+      <div class="status-badges" id="examStatusBar" style="display: none;">
+        <span class="badge" id="badgeExamCode">Đề số 1</span>
+        <span class="badge badge-timer" id="badgeTimer">⏱ 10:00</span>
+        <span class="badge badge-violation" id="badgeViolation">⚠️ Vi phạm: 0/3</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- ======================================================================
+         MÀN HÌNH 1: CHỌN LỚP, TÌM & CHỌN TÊN HỌC SINH & CHỌN ĐỀ THI
+         ====================================================================== -->
+    <section id="screenSetup" class="card">
+      <div class="card-header">
+        <div class="card-title">📋 Bước 1: Xác nhận thông tin thí sinh &amp; Chọn đề kiểm tra</div>
+        <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Thời gian: 10 phút | Thang điểm: 3,0</span>
+      </div>
+
+      <!-- Chọn lớp và chọn học sinh (2 cột gọn gàng) -->
+      <div class="setup-grid">
+        <div class="form-group">
+          <label for="selectClass">1. Chọn Lớp học <span style="color: var(--danger);">*</span></label>
+          <select id="selectClass" class="form-control">
+            <option value="">-- Vui lòng chọn lớp --</option>
+            <option value="12A3">Lớp 12A3 (44 học sinh)</option>
+            <option value="12A9">Lớp 12A9 (46 học sinh)</option>
+            <option value="12A14">Lớp 12A14 (46 học sinh)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="selectStudent">2. Chọn Họ và tên học sinh <span style="color: var(--danger);">*</span></label>
+          <select id="selectStudent" class="form-control" disabled>
+            <option value="">-- Chọn lớp trước để mở danh sách --</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Khung trạng thái nạp danh sách tự động -->
+      <div class="roster-status-box">
+        <div class="roster-info" id="rosterStatusText">
+          <strong>📊 Nạp danh sách tự động:</strong> Khi chọn lớp (<code>12A3</code>, <code>12A9</code>, <code>12A14</code>), hệ thống tự động đọc danh sách từ file Excel cùng thư mục hoặc dữ liệu chuẩn tích hợp sẵn.
+        </div>
+      </div>
+
+      <!-- Chọn Đề số 1 hoặc Đề số 2 -->
+      <div class="form-group">
+        <label>3. Chọn Đề kiểm tra <span style="color: var(--danger);">*</span></label>
+        <div class="exam-choice-grid">
+          <div class="exam-option selected" data-exam="1" id="optExam1">
+            <div class="exam-option-header">
+              <span>📝 ĐỀ SỐ 1</span>
+              <span style="font-size: 0.8rem; background: #dbeafe; padding: 2px 8px; border-radius: 99px;">3,0 điểm</span>
+            </div>
+            <p><strong>Câu 1 (1,0đ):</strong> Tính kế thừa màu sắc &amp; gạch chân (<code>body</code>, <code>p</code>).</p>
+            <p><strong>Câu 2 (2,0đ):</strong> Viết CSS định dạng thẻ <code>&lt;h1&gt;</code> và <code>&lt;p&gt;</code> trong <code>&lt;style&gt;</code>.</p>
+          </div>
+
+          <div class="exam-option" data-exam="2" id="optExam2">
+            <div class="exam-option-header">
+              <span>📝 ĐỀ SỐ 2</span>
+              <span style="font-size: 0.8rem; background: #dbeafe; padding: 2px 8px; border-radius: 99px;">3,0 điểm</span>
+            </div>
+            <p><strong>Câu 1 (1,0đ):</strong> Độ ưu tiên <code>!important</code> &amp; kế thừa căn lề (<code>h1</code>).</p>
+            <p><strong>Câu 2 (2,0đ):</strong> Viết CSS định dạng thẻ <code>&lt;h2&gt;</code> và lớp <code>.doan-van</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quy định phòng thi chống gian lận -->
+      <div class="rules-box">
+        <strong>🛡️ QUY ĐỊNH CHỐNG GIAN LẬN TRONG KHI LÀM BÀI:</strong>
+        <ul>
+          <li>Hệ thống <strong>khóa hoàn toàn chức năng Sao chép (Copy), Dán (Paste), Cắt (Cut), Kéo thả văn bản</strong> từ nguồn bên ngoài và vô hiệu hóa chuột phải / phím tắt kiểm tra mã nguồn (<code>Ctrl+V</code>, <code>F12</code>, <code>Ctrl+U</code>...).</li>
+          <li><strong>Tuyệt đối không chuyển tab, thu nhỏ trình duyệt hoặc mở ứng dụng khác</strong>. Mỗi lần rời khỏi màn hình làm bài sẽ phát âm thanh cảnh báo và ghi nhận vi phạm; <strong>đủ 3 lần hệ thống tự động khóa và chấm điểm ngay lập tức</strong>.</li>
+          <li>Sử dụng thanh <strong>Gợi ý câu lệnh bấm nhanh</strong> ngay trên ô làm bài để chèn từ khóa và ký hiệu CSS nhanh chóng, chính xác.</li>
+        </ul>
+      </div>
+
+      <button type="button" class="btn btn-primary btn-lg" id="btnStartExam">
+        🚀 Bắt đầu làm bài (10 phút)
+      </button>
+    </section>
+
+    <!-- ======================================================================
+         MÀN HÌNH 2: LÀM BÀI THI TỰ LUẬN
+         ====================================================================== -->
+    <section id="screenExam" class="hidden">
+      <div class="student-banner">
+        <div>
+          <strong>Thí sinh:</strong> <span id="displayStudentName" style="color: var(--primary); font-weight: 700;">---</span>
+          &nbsp;|&nbsp; <strong>Lớp:</strong> <span id="displayStudentClass" style="font-weight: 700;">---</span>
+        </div>
+        <div style="font-size: 0.85rem; color: var(--text-muted);">
+          💡 Mẹo: Đặt con trỏ vào ô trả lời rồi bấm các nút gợi ý màu bên trên để chèn nhanh.
+        </div>
+      </div>
+
+      <!-- CÂU 1: ĐỌC HIỂU -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title" id="q1HeaderTitle">Câu 1 (1,0 điểm – Đọc hiểu CSS)</div>
+          <span style="font-size: 0.82rem; color: var(--text-muted);">Trả lời ngắn gọn 2–3 dòng</span>
+        </div>
+
+        <div class="question-box" id="q1PromptBox">
+          <!-- Nội dung đề Câu 1 được render động theo Đề 1 hoặc Đề 2 -->
+        </div>
+
+        <!-- Thanh gợi ý bấm nhanh Câu 1 -->
+        <div class="quick-toolbar">
+          <div class="quick-toolbar-label">
+            <span>⚡ Gợi ý cụm từ trả lời nhanh (Bấm để chèn vào Câu 1):</span>
+            <div style="display: flex; gap: 6px;">
+              <button type="button" class="chip-btn" data-target="ansQ1" data-action="newline">Xuống dòng ↵</button>
+              <button type="button" class="chip-btn" data-target="ansQ1" data-action="backspace">Xóa 1 ký tự ⌫</button>
+              <button type="button" class="chip-btn chip-action" data-target="ansQ1" data-action="clear">Xóa ô</button>
+            </div>
+          </div>
+          <div class="chip-group" id="q1QuickChips">
+            <!-- Các nút gợi ý Câu 1 được nạp động theo Đề 1 / Đề 2 -->
+          </div>
+        </div>
+        <textarea id="ansQ1" class="answer-textarea" placeholder="Nhập câu trả lời Câu 1 tại đây hoặc bấm các nút gợi ý phía trên..." spellcheck="false"></textarea>
+      </div>
+
+      <!-- CÂU 2: VIẾT MÃ CSS -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title" id="q2HeaderTitle">Câu 2 (2,0 điểm – Viết mã CSS)</div>
+          <span style="font-size: 0.82rem; color: var(--text-muted);">Đặt trong cặp thẻ &lt;style&gt; ... &lt;/style&gt;</span>
+        </div>
+
+        <div class="question-box" id="q2PromptBox">
+          <!-- Nội dung đề Câu 2 được render động theo Đề 1 hoặc Đề 2 -->
+        </div>
+
+        <!-- Thanh gợi ý bấm nhanh Câu 2 -->
+        <div class="quick-toolbar">
+          <div class="quick-toolbar-label">
+            <span>⚡ Bàn phím câu lệnh CSS nhanh (Bấm để chèn tại vị trí con trỏ Câu 2):</span>
+            <div style="display: flex; gap: 6px;">
+              <button type="button" class="chip-btn" data-target="ansQ2" data-action="newline">Xuống dòng ↵</button>
+              <button type="button" class="chip-btn" data-target="ansQ2" data-action="backspace">Xóa 1 ký tự ⌫</button>
+              <button type="button" class="chip-btn chip-action" data-target="ansQ2" data-action="clear">Xóa ô</button>
+            </div>
+          </div>
+
+          <!-- Hàng 1: Cấu trúc thẻ & bộ chọn -->
+          <div class="chip-group">
+            <button type="button" class="chip-btn chip-tag" data-target="ansQ2" data-insert="<style>\n\n</style>" data-cursor-offset="-9">&lt;style&gt;...&lt;/style&gt;</button>
+            <button type="button" class="chip-btn chip-tag" data-target="ansQ2" data-insert="h1 {\n  \n}" data-cursor-offset="-2">h1 {  }</button>
+            <button type="button" class="chip-btn chip-tag" data-target="ansQ2" data-insert="h2 {\n  \n}" data-cursor-offset="-2">h2 {  }</button>
+            <button type="button" class="chip-btn chip-tag" data-target="ansQ2" data-insert="p {\n  \n}" data-cursor-offset="-2">p {  }</button>
+            <button type="button" class="chip-btn chip-tag" data-target="ansQ2" data-insert=".doan-van {\n  \n}" data-cursor-offset="-2">.doan-van {  }</button>
+            <button type="button" class="chip-btn chip-sym" data-target="ansQ2" data-insert=" {\n  \n}" data-cursor-offset="-2">{  }</button>
+            <button type="button" class="chip-btn chip-sym" data-target="ansQ2" data-insert=";">;</button>
+            <button type="button" class="chip-btn chip-sym" data-target="ansQ2" data-insert='""' data-cursor-offset="-1">""</button>
+          </div>
+
+          <!-- Hàng 2: Thuộc tính CSS -->
+          <div class="chip-group">
+            <button type="button" class="chip-btn chip-prop" data-target="ansQ2" data-insert="text-align: ">text-align: </button>
+            <button type="button" class="chip-btn chip-prop" data-target="ansQ2" data-insert="font-family: ">font-family: </button>
+            <button type="button" class="chip-btn chip-prop" data-target="ansQ2" data-insert="color: ">color: </button>
+            <button type="button" class="chip-btn chip-prop" data-target="ansQ2" data-insert="font-size: ">font-size: </button>
+            <button type="button" class="chip-btn chip-prop" data-target="ansQ2" data-insert="line-height: ">line-height: </button>
+            <button type="button" class="chip-btn chip-prop" data-target="ansQ2" data-insert="text-indent: ">text-indent: </button>
+            <button type="button" class="chip-btn chip-prop" data-target="ansQ2" data-insert="font-style: ">font-style: </button>
+          </div>
+
+          <!-- Hàng 3: Giá trị CSS kèm dấu chấm phẩy -->
+          <div class="chip-group">
+            <button type="button" class="chip-btn chip-val" data-target="ansQ2" data-insert="center;\n  ">center;</button>
+            <button type="button" class="chip-btn chip-val" data-target="ansQ2" data-insert="left;\n  ">left;</button>
+            <button type="button" class="chip-btn chip-val" data-target="ansQ2" data-insert='"Times New Roman", serif;\n  '>"Times New Roman", serif;</button>
+            <button type="button" class="chip-btn chip-val" data-target="ansQ2" data-insert='"Segoe UI", sans-serif;\n  '>"Segoe UI", sans-serif;</button>
+            <button type="button" class="chip-btn chip-val" data-target="ansQ2" data-insert="navy;\n  ">navy;</button>
+            <button type="button" class="chip-btn chip-val" data-target="ansQ2" data-insert="darkred;\n  ">darkred;</button>
+            <button type="button" class="chip-btn chip-val" data-target="ansQ2" data-insert="16px;\n  ">16px;</button>
+            <button type="button" class="chip-btn chip-val" data-target="ansQ2" data-insert="15px;\n  ">15px;</button>
+            <button type="button" class="chip-btn chip-val" data-target="ansQ2" data-insert="line-height: 1.5;\n  ">line-height: 1.5;</button>
+            <button type="button" class="chip-btn chip-val" data-target="ansQ2" data-insert="font-style: italic;\n  ">font-style: italic;</button>
+            <button type="button" class="chip-btn chip-val" data-target="ansQ2" data-insert="20px;\n  ">20px;</button>
+            <button type="button" class="chip-btn chip-val" data-target="ansQ2" data-insert="25px;\n  ">25px;</button>
+          </div>
+        </div>
+        <textarea id="ansQ2" class="answer-textarea code-editor" placeholder="<style>&#10;  /* Viết mã CSS của em tại đây */&#10;</style>" spellcheck="false"></textarea>
+      </div>
+
+      <!-- Nút Nộp bài -->
+      <div style="display: flex; justify-content: flex-end; gap: 12px;">
+        <button type="button" class="btn btn-success btn-lg" id="btnSubmitExam">
+          ✅ NỘP BÀI &amp; CHẤM ĐIỂM TỰ ĐỘNG
+        </button>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         MÀN HÌNH 3: PHIẾU KẾT QUẢ & CHI TIẾT BAREM CHẤM ĐIỂM
+         ====================================================================== -->
+    <section id="screenResult" class="hidden">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🎓 PHIẾU KẾT QUẢ KIỂM TRA TỰ ĐỘNG</div>
+          <span id="resSubmitReason" style="font-size: 0.85rem; font-weight: 600; color: var(--success);">Đã nộp bài hợp lệ</span>
+        </div>
+
+        <div class="score-hero">
+          <div style="font-size: 1.05rem; font-weight: 700; color: #1e3a8a;" id="resStudentInfo">
+            Học sinh: --- | Lớp: --- | Đề số: ---
+          </div>
+          <div style="font-size: 0.88rem; color: var(--text-muted); margin-top: 4px;" id="resMetaInfo">
+            Thời gian làm bài: --- | Số lần cảnh báo rời trang: 0
+          </div>
+
+          <div class="score-numbers">
+            <div class="score-box">
+              <div class="label">Tổng điểm bài làm (Thang 3,0)</div>
+              <div class="val" id="resScore3">0,00 / 3,00 điểm</div>
+            </div>
+            <div class="score-box sub-score">
+              <div class="label">Câu 1 (Đọc hiểu)</div>
+              <div class="val" id="resScoreQ1">0,00 / 1,00đ</div>
+            </div>
+            <div class="score-box sub-score">
+              <div class="label">Câu 2 (Viết CSS)</div>
+              <div class="val" id="resScoreQ2">0,00 / 2,00đ</div>
+            </div>
+          </div>
+        </div>
+
+        <h3 style="font-size: 1rem; margin-bottom: 10px; color: var(--text-main);">📊 Bảng chi tiết chấm điểm theo Barem chuẩn:</h3>
+        <div style="overflow-x: auto;">
+          <table class="rubric-table">
+            <thead>
+              <tr>
+                <th style="width: 26%;">Tiêu chí đánh giá</th>
+                <th style="width: 14%;">Điểm đạt</th>
+                <th>Nhận xét chi tiết của máy chấm</th>
+              </tr>
+            </thead>
+            <tbody id="rubricTableBody">
+              <!-- Dữ liệu chấm chi tiết từng ý -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Hiển thị lại bài làm của học sinh -->
+        <div style="margin-top: 22px;">
+          <h3 style="font-size: 1rem; margin-bottom: 10px; color: var(--text-main);">📄 Nội dung bài làm đã lưu:</h3>
+          <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: var(--radius-md); padding: 14px; margin-bottom: 12px;">
+            <strong style="font-size: 0.88rem; color: var(--primary);">Bài làm Câu 1:</strong>
+            <pre id="reviewQ1" style="white-space: pre-wrap; font-family: 'Inter', sans-serif; font-size: 0.92rem; margin-top: 6px; color: #1e293b;"></pre>
+          </div>
+          <div style="background: #0f172a; border-radius: var(--radius-md); padding: 14px; color: #e2e8f0;">
+            <strong style="font-size: 0.88rem; color: #93c5fd;">Bài làm Câu 2 (Mã CSS):</strong>
+            <pre id="reviewQ2" style="white-space: pre-wrap; font-family: 'JetBrains Mono', monospace; font-size: 0.88rem; margin-top: 6px;"></pre>
+          </div>
+        </div>
+
+        <!-- Các nút xuất biên bản kết quả -->
+        <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 22px;">
+          <button type="button" class="btn btn-success" id="btnDownloadXlsx">
+            📊 Tải file kết quả Excel (.XLSX)
+          </button>
+          <button type="button" class="btn btn-primary" id="btnDownloadTxt">
+            💾 Tải biên bản kết quả (.TXT)
+          </button>
+          <button type="button" class="btn btn-outline" id="btnResetHome">
+            🔄 Về màn hình chính
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ========================================================================
+       MODAL THÔNG BÁO & XÁC NHẬN TÙY CHỈNH (KHÔNG DÙNG ALERT/CONFIRM)
+       ======================================================================== -->
+  <div id="customModal" class="modal-backdrop hidden">
+    <div class="modal-box">
+      <div id="modalIcon" class="modal-icon info">ℹ️</div>
+      <div id="modalTitle" class="modal-title">Thông báo</div>
+      <div id="modalBody" class="modal-body">Nội dung thông báo</div>
+      <div id="modalActions" class="modal-actions">
+        <button type="button" class="btn btn-primary" id="modalBtnOk">Đồng ý</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast thông báo nhanh -->
+  <div id="toastMsg" class="toast hidden"></div>
+
+  <script>
+    /**
+     * ============================================================================
+     * ỨNG DỤNG KIỂM TRA TỰ LUẬN TIN HỌC 12 - BÀI 14 (CSS)
+     * Giáo viên: Nguyễn Hoàng Hải Đăng - Trường THPT Bình Tân
+     * Hỗ trợ đọc trực tiếp 3 file Excel (12A3.xlsx, 12A9.xlsx, 12A14.xlsx)
+     * kèm dữ liệu thật tích hợp sẵn để hoạt động 100% offline.
+     * ============================================================================
+     */
+
+    // ----------------------------------------------------------------------------
+    // 1. DANH SÁCH HỌC SINH THẬT TRÍCH XUẤT TỪ 3 FILE EXCEL (12A3.xlsx, 12A9.xlsx, 12A14.xlsx)
+    // ----------------------------------------------------------------------------
+    const EMBEDDED_EXCEL_ROSTER = {
+      "12A3": [
+        { stt: 1, name: "NGUYỄN NGỌC THẢO AN" },
+        { stt: 2, name: "LÊ NGUYỄN NGỌC ANH" },
+        { stt: 3, name: "NGÔ MINH ANH" },
+        { stt: 4, name: "NGUYỄN BẢNG ANH" },
+        { stt: 5, name: "PHẠM QUỲNH ANH" },
+        { stt: 6, name: "Lê Huy Chương" },
+        { stt: 7, name: "TĂNG MINH CÔNG" },
+        { stt: 8, name: "TRẦN VIỆT CƯỜNG" },
+        { stt: 9, name: "PHẠM CÔNG DANH" },
+        { stt: 10, name: "LÊ BÁ DUY" },
+        { stt: 11, name: "SỬ HOÀNG ANH DUY" },
+        { stt: 12, name: "NGUYỄN THÀNH ĐẠT" },
+        { stt: 13, name: "NGUYỄN HOÀNG ĐĂNG" },
+        { stt: 14, name: "VÕ HUỲNH HOA ĐĂNG" },
+        { stt: 15, name: "TRỊNH MINH ĐỨC" },
+        { stt: 16, name: "TRẦN HOÀNG HÀ" },
+        { stt: 17, name: "HÀ GIA HÀO" },
+        { stt: 18, name: "HỒ QUANG HIỂN" },
+        { stt: 19, name: "NGUYỄN DOÃN MINH HOÀNG" },
+        { stt: 20, name: "NGUYỄN HUY HOÀNG" },
+        { stt: 21, name: "NGUYỄN ĐĂNG KHOA" },
+        { stt: 22, name: "TRẦN NGỌC KHÁNH LINH" },
+        { stt: 23, name: "NGUYỄN THÀNH MINH LUÂN" },
+        { stt: 24, name: "LÊ HOÀNG TUYẾT MAI" },
+        { stt: 25, name: "LÊ NGUYỄN BẢO MINH" },
+        { stt: 26, name: "Võ Thị Ngọc Ngân" },
+        { stt: 27, name: "DƯƠNG ÁNH NGỌC" },
+        { stt: 28, name: "ĐÀO VŨ BẢO NGUYÊN" },
+        { stt: 29, name: "NGUYỄN HẢI MINH NHẬT" },
+        { stt: 30, name: "HUỲNH TẤN PHÁT" },
+        { stt: 31, name: "ĐỖ HUỲNH THANH PHONG" },
+        { stt: 32, name: "LÊ TRẦM NHƯ PHÚC" },
+        { stt: 33, name: "LÂM TRẦN KIM PHỤNG" },
+        { stt: 34, name: "NGUYỄN VĂN TÀI" },
+        { stt: 35, name: "ĐỖ THI" },
+        { stt: 36, name: "HOÀNG MINH THIÊN" },
+        { stt: 37, name: "LÊ BÁ THIÊN" },
+        { stt: 38, name: "PHẠM PHÚ THỊNH" },
+        { stt: 39, name: "VÕ NGỌC THANH TỊNH" },
+        { stt: 40, name: "TRẦN MINH TRÍ" },
+        { stt: 41, name: "TRẦN TUẤN TÚ" },
+        { stt: 42, name: "LÂM TUẤN VƯƠNG" },
+        { stt: 43, name: "GIANG NGUYỄN YẾN VY" },
+        { stt: 44, name: "DƯƠNG THỊ HỒNG XUÂN" }
+      ],
+      "12A9": [
+        { stt: 1, name: "NGUYỄN KHẢ ÁI" },
+        { stt: 2, name: "ĐINH HOÀI AN" },
+        { stt: 3, name: "NGUYỄN TẤN AN" },
+        { stt: 4, name: "CHU THỊ QUỲNH ANH" },
+        { stt: 5, name: "LÊ THANH QUỲNH ANH" },
+        { stt: 6, name: "TRẦN NGỌC PHƯƠNG ANH" },
+        { stt: 7, name: "NGUYỄN TRÍ HOÀNG ÂN" },
+        { stt: 8, name: "CÁI GIA BẢO" },
+        { stt: 9, name: "NGUYỄN ĐỨC CƠ" },
+        { stt: 10, name: "LÊ HOÀNG DUY" },
+        { stt: 11, name: "NGUYỄN KHÁNH DUY" },
+        { stt: 12, name: "NGUYỄN VŨ HẢI ĐĂNG" },
+        { stt: 13, name: "PHẠM CHÂU KIM HIỀN" },
+        { stt: 14, name: "NGUYỄN ĐỨC HUY" },
+        { stt: 15, name: "PHẠM THỊ CẨM HƯỜNG" },
+        { stt: 16, name: "NGUYỄN ÂN HY" },
+        { stt: 17, name: "LÂM NHẬT KHÁNH" },
+        { stt: 18, name: "NGUYỄN BẢO KHÁNH" },
+        { stt: 19, name: "NGUYỄN VĂN KHOA" },
+        { stt: 20, name: "HUỲNH TIẾN LỘC" },
+        { stt: 21, name: "NGUYỄN THẢO MY" },
+        { stt: 22, name: "TRẦN NHẬT NAM" },
+        { stt: 23, name: "TRẦN THUÝ NGÂN" },
+        { stt: 24, name: "NGUYỄN ĐỖ KHÁNH NGỌC" },
+        { stt: 25, name: "PHAN BẢO NGỌC" },
+        { stt: 26, name: "LÊ THÀNH NHÂN" },
+        { stt: 27, name: "LÊ HỒNG YẾN NHI" },
+        { stt: 28, name: "NGUYỄN THỊ ÁNH NHI" },
+        { stt: 29, name: "LÊ TRỊNH THẢO NHƯ" },
+        { stt: 30, name: "NGUYỄN THỊ HUỲNH NHƯ" },
+        { stt: 31, name: "ĐINH QUANG TÂN PHÚ" },
+        { stt: 32, name: "BÙI VĂN PHÚC" },
+        { stt: 33, name: "NGUYỄN DUY PHÚC" },
+        { stt: 34, name: "NGUYỄN VĂN QUI" },
+        { stt: 35, name: "NGUYỄN CÔNG SƠN" },
+        { stt: 36, name: "NGUYỄN VÕ MINH TÂM" },
+        { stt: 37, name: "VÕ VĂN TÂN" },
+        { stt: 38, name: "LÊ NGUYỄN ANH THƯ" },
+        { stt: 39, name: "TRẦN KIM TINH" },
+        { stt: 40, name: "TRẦN MINH TOÀN" },
+        { stt: 41, name: "TRẦN THUỲ TRANG" },
+        { stt: 42, name: "NGUYỄN NGỌC PHƯƠNG TRINH" },
+        { stt: 43, name: "HUỲNH ĐẶNG TRỌNG" },
+        { stt: 44, name: "TRỊNH HOÀNG THÁI TÚ" },
+        { stt: 45, name: "NGUYỄN THỊ THANH VÂN" },
+        { stt: 46, name: "LÊ THỊ TƯỜNG VY" }
+      ],
+      "12A14": [
+        { stt: 1, name: "TRẦN ĐẶNG HOÀNG ANH" },
+        { stt: 2, name: "TRẦN QUỲNH ANH" },
+        { stt: 3, name: "NGUYỄN HỒ BẢO ÂN" },
+        { stt: 4, name: "TRẦN THIÊN BẢO" },
+        { stt: 5, name: "NGUYỄN HUỲNH BẢO CHÂU" },
+        { stt: 6, name: "TRẦN MINH CHÂU" },
+        { stt: 7, name: "NGUYỄN THỊ KIM CHI" },
+        { stt: 8, name: "NGUYỄN THÀNH ĐẠT" },
+        { stt: 9, name: "Mai Huỳnh Tú Hảo" },
+        { stt: 10, name: "NGUYỄN KIM HẰNG" },
+        { stt: 11, name: "TRẦN NGỌC BẢO HÂN" },
+        { stt: 12, name: "NGUYỄN VĂN HIỆP" },
+        { stt: 13, name: "DƯƠNG GIA HOÀ" },
+        { stt: 14, name: "NGUYỄN THẾ TUẤN HÙNG" },
+        { stt: 15, name: "NGUYỄN MAI HOÀI HƯƠNG" },
+        { stt: 16, name: "PHAN THỊ QUỲNH HƯƠNG" },
+        { stt: 17, name: "NGUYỄN THIÊN KIM" },
+        { stt: 18, name: "CHÂU ĐỨC LỢI" },
+        { stt: 19, name: "TRƯƠNG KIM NGÂN" },
+        { stt: 20, name: "NGUYỄN TRẦN MẪN NGHI" },
+        { stt: 21, name: "BÙI DUYÊN KIM NGỌC" },
+        { stt: 22, name: "LÂM HOÀNG THẢO NGỌC" },
+        { stt: 23, name: "LÊ NGUYỄN BẢO NGỌC" },
+        { stt: 24, name: "LÊ CAO UYÊN NHI" },
+        { stt: 25, name: "LÊ NGUYỄN ĐÔNG NHI" },
+        { stt: 26, name: "HỒ THỊ HUỲNH NHƯ" },
+        { stt: 27, name: "NGUYỄN CHÍNH ĐỨC PHÁT" },
+        { stt: 28, name: "PHAN HUỲNH TẤN PHÁT" },
+        { stt: 29, name: "LÝ VĨNH PHƯỚC" },
+        { stt: 30, name: "LÊ ĐẶNG MINH QUÂN" },
+        { stt: 31, name: "NGUYỄN TRỌNG MINH QUÂN" },
+        { stt: 32, name: "PHẠM TRỊNH HẢI SƠN" },
+        { stt: 33, name: "LƯ MINH TÂM" },
+        { stt: 34, name: "DIỆP QUANG TẤN" },
+        { stt: 35, name: "TRẦN THANH THẢO" },
+        { stt: 36, name: "NGUYỄN THỊ THANH THUÝ" },
+        { stt: 37, name: "TĂNG TRẦN ANH THƯ" },
+        { stt: 38, name: "TRẦN THỊ MINH THƯ" },
+        { stt: 39, name: "NGÔ GIA TÍN" },
+        { stt: 40, name: "NGUYỄN PHẠM HỮU TÌNH" },
+        { stt: 41, name: "TRẦN NGỌC YẾN TRANG" },
+        { stt: 42, name: "ĐỖ THÀNH TRUNG" },
+        { stt: 43, name: "NGUYỄN NGỌC NHƯ TUYỀN" },
+        { stt: 44, name: "PHẠM TRIỆU PHÚ TƯỜNG" },
+        { stt: 45, name: "TỐNG THỊ THANH VÂN" },
+        { stt: 46, name: "HUỲNH LÊ YẾN VY" }
+      ]
+    };
+
+    // Bộ nhớ đệm lưu danh sách đã nạp cho từng lớp (dạng [{stt, name, label}])
+    const loadedRosterCache = {};
+
+    // ----------------------------------------------------------------------------
+    // 2. NỘI DUNG ĐỀ THI SỐ 1 & ĐỀ THI SỐ 2
+    // ----------------------------------------------------------------------------
+    const EXAM_DATA = {
+      1: {
+        code: "Đề số 1",
+        q1Title: "Câu 1 (1,0 điểm – Đọc hiểu CSS)",
+        q1Html: `
+          <p>Cho đoạn mã CSS sau:</p>
+          <pre class="code-snippet">body { color: blue; font-family: Arial, sans-serif; text-decoration: underline; }
+p { color: red; }</pre>
+          <p><strong>Hỏi:</strong> Đoạn văn <code>&lt;p&gt;</code> hiển thị màu chữ gì? Có bị gạch chân (<code>underline</code>) giống <code>body</code> không? Vì sao?</p>
+        `,
+        q1Chips: [
+          "Màu chữ: đỏ (red). ",
+          "Không bị gạch chân ",
+          "vì text-decoration không có tính kế thừa."
+        ],
+        q2Title: "Câu 2 (2,0 điểm – Viết mã CSS)",
+        q2Html: `
+          <p>Viết đoạn mã CSS đặt trong cặp thẻ <code>&lt;style&gt; ... &lt;/style&gt;</code> để định dạng:</p>
+          <ul class="question-list">
+            <li><strong>Tiêu đề <code>&lt;h1&gt;</code>:</strong> căn giữa trang (<code>center</code>), phông chữ <code>"Times New Roman", serif</code>, màu chữ <code>navy</code>.</li>
+            <li><strong>Đoạn văn <code>&lt;p&gt;</code>:</strong> cỡ chữ <code>16px</code>, khoảng cách dòng <code>1.5</code>, thụt lề đầu dòng <code>20px</code>.</li>
+          </ul>
+        `
+      },
+      2: {
+        code: "Đề số 2",
+        q1Title: "Câu 1 (1,0 điểm – Đọc hiểu ngắn)",
+        q1Html: `
+          <p>Cho đoạn mã CSS sau:</p>
+          <pre class="code-snippet">h1 { color: green; text-align: left; }
+h1 { color: red !important; }</pre>
+          <p><strong>Hỏi:</strong> Tiêu đề <code>&lt;h1&gt;</code> hiển thị màu chữ gì và căn lề phía nào? Nêu ngắn gọn nguyên nhân.</p>
+        `,
+        q1Chips: [
+          "Màu chữ: đỏ (red) ",
+          "do !important có độ ưu tiên cao nhất. ",
+          "Căn lề: trái (left) ",
+          "do kế thừa thuộc tính text-align."
+        ],
+        q2Title: "Câu 2 (2,0 điểm – Viết mã CSS)",
+        q2Html: `
+          <p>Viết đoạn mã CSS đặt trong cặp thẻ <code>&lt;style&gt; ... &lt;/style&gt;</code> để định dạng:</p>
+          <ul class="question-list">
+            <li><strong>Tiêu đề <code>&lt;h2&gt;</code>:</strong> căn lề trái (<code>left</code>), phông chữ <code>"Segoe UI", sans-serif</code>, màu chữ <code>darkred</code>.</li>
+            <li><strong>Lớp đoạn văn <code>.doan-van</code>:</strong> cỡ chữ <code>15px</code>, in nghiêng (<code>italic</code>), thụt lề đầu dòng <code>25px</code>.</li>
+          </ul>
+        `
+      }
+    };
+
+    // ----------------------------------------------------------------------------
+    // 3. TRẠNG THÁI ỨNG DỤNG (STATE)
+    // ----------------------------------------------------------------------------
+    const appState = {
+      selectedClass: "",
+      selectedStudent: "", // Lưu chuỗi "STT. Họ và tên"
+      selectedStudentObj: null, // Lưu { stt, name, label }
+      selectedExam: 1,
+      isExamActive: false,
+      isSubmitted: false,
+      timeLeftSeconds: 10 * 60, // 10 phút = 600 giây
+      timerInterval: null,
+      startTime: null,
+      endTime: null,
+      violations: 0,
+      maxViolations: 3,
+      lastViolationTimestamp: 0,
+      latestGradeResult: null
+    };
+
+    // ----------------------------------------------------------------------------
+    // 4. TIỆN ÍCH HIỂN THỊ MODAL, TOAST & ÂM THANH CẢNH BÁO (WEB AUDIO API)
+    // ----------------------------------------------------------------------------
+    const modalEl = document.getElementById("customModal");
+    const modalIconEl = document.getElementById("modalIcon");
+    const modalTitleEl = document.getElementById("modalTitle");
+    const modalBodyEl = document.getElementById("modalBody");
+    const modalActionsEl = document.getElementById("modalActions");
+
+    function playWarningBeep() {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(680, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(420, ctx.currentTime + 0.25);
+        gain.gain.setValueAtTime(0.18, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.28);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.3);
+      } catch (e) {
+        // Bỏ qua nếu trình duyệt chặn autoplay audio
+      }
+    }
+
+    function showAlertModal(title, message, type = "info") {
+      modalIconEl.className = `modal-icon ${type}`;
+      modalIconEl.textContent = type === "danger" ? "⚠️" : "ℹ️";
+      modalTitleEl.textContent = title;
+      modalBodyEl.innerHTML = message;
+      modalActionsEl.innerHTML = `<button type="button" class="btn btn-primary" id="btnModalClose">Đã hiểu</button>`;
+      modalEl.classList.remove("hidden");
+
+      document.getElementById("btnModalClose").onclick = () => {
+        modalEl.classList.add("hidden");
+      };
+    }
+
+    function showConfirmModal(title, message, onConfirm) {
+      modalIconEl.className = "modal-icon info";
+      modalIconEl.textContent = "❓";
+      modalTitleEl.textContent = title;
+      modalBodyEl.innerHTML = message;
+      modalActionsEl.innerHTML = `
+        <button type="button" class="btn btn-outline" id="btnModalCancel">Kiểm tra lại</button>
+        <button type="button" class="btn btn-success" id="btnModalConfirm">Xác nhận nộp bài</button>
+      `;
+      modalEl.classList.remove("hidden");
+
+      document.getElementById("btnModalCancel").onclick = () => {
+        modalEl.classList.add("hidden");
+      };
+      document.getElementById("btnModalConfirm").onclick = () => {
+        modalEl.classList.add("hidden");
+        if (typeof onConfirm === "function") onConfirm();
+      };
+    }
+
+    let toastTimeout = null;
+    function showToast(text, isDanger = false) {
+      const toast = document.getElementById("toastMsg");
+      toast.textContent = text;
+      toast.className = isDanger ? "toast danger" : "toast";
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.add("hidden");
+      }, 2800);
+    }
+
+    function removeVietnameseTones(str) {
+      return str
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/đ/g, "d")
+        .replace(/Đ/g, "D")
+        .toLowerCase();
+    }
+
+    // ----------------------------------------------------------------------------
+    // 5. ĐỌC TRỰC TIẾP 3 FILE EXCEL (12A3.xlsx, 12A9.xlsx, 12A14.xlsx) BẰNG SHEETJS
+    // ----------------------------------------------------------------------------
+    const selectClassEl = document.getElementById("selectClass");
+    const selectStudentEl = document.getElementById("selectStudent");
+    const rosterStatusTextEl = document.getElementById("rosterStatusText");
+
+    /**
+     * Phân tích ArrayBuffer của file Excel (.xlsx/.xls) bằng SheetJS (XLSX)
+     * Tự động dò tìm cột 'stt' và 'họ và tên' (không phân biệt hoa thường/dấu)
+     */
+    function parseExcelArrayBuffer(arrayBuffer) {
+      if (typeof XLSX === "undefined") {
+        throw new Error("Thư viện SheetJS chưa sẵn sàng.");
+      }
+      const workbook = XLSX.read(arrayBuffer, { type: "array" });
+      const firstSheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheetName];
+      const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
+
+      let sttColIdx = -1;
+      let nameColIdx = -1;
+      let headerRowIdx = -1;
+
+      // Tìm dòng tiêu đề chứa cột 'stt' và 'họ và tên'
+      for (let r = 0; r < Math.min(rows.length, 15); r++) {
+        const row = rows[r];
+        if (!Array.isArray(row)) continue;
+        row.forEach((cell, cIdx) => {
+          const norm = removeVietnameseTones(String(cell || "").trim());
+          if (norm === "stt" || norm === "so thu tu" || norm === "tt") {
+            sttColIdx = cIdx;
+            headerRowIdx = r;
+          }
+          if (norm.includes("ho va ten") || norm.includes("ho ten") || norm === "ten") {
+            nameColIdx = cIdx;
+            headerRowIdx = r;
+          }
+        });
+        if (nameColIdx !== -1) break;
+      }
+
+      // Nếu file không có tiêu đề rõ ràng, mặc định cột 0 là STT, cột 1 là Họ tên
+      if (nameColIdx === -1) {
+        sttColIdx = 0;
+        nameColIdx = 1;
+        headerRowIdx = -1;
+      }
+
+      const students = [];
+      let autoStt = 1;
+
+      for (let r = headerRowIdx + 1; r < rows.length; r++) {
+        const row = rows[r];
+        if (!Array.isArray(row)) continue;
+
+        const rawName = String(row[nameColIdx] || "").trim();
+        if (!rawName) continue;
+
+        // Bỏ qua các dòng tổng kết cuối bảng nếu có
+        const normName = removeVietnameseTones(rawName);
+        if (normName.startsWith("tong") || normName.startsWith("si so") || normName.startsWith("giao vien")) {
+          continue;
+        }
+
+        let sttVal = sttColIdx !== -1 ? parseInt(String(row[sttColIdx] || "").trim(), 10) : NaN;
+        if (isNaN(sttVal)) {
+          sttVal = autoStt;
+        }
+        autoStt = sttVal + 1;
+
+        students.push({
+          stt: sttVal,
+          name: rawName,
+          label: `${sttVal}. ${rawName}`
+        });
+      }
+
+      return students;
+    }
+
+    function formatEmbeddedList(className) {
+      const raw = EMBEDDED_EXCEL_ROSTER[className] || [];
+      return raw.map(item => ({
+        stt: item.stt,
+        name: item.name,
+        label: `${item.stt}. ${item.name}`
+      }));
+    }
+
+    /**
+     * Tự động nạp danh sách học sinh khi chọn lớp 12A3, 12A9 hoặc 12A14:
+     * 1. Thử fetch('./{LOP}.xlsx') cùng thư mục và đọc bằng SheetJS
+     * 2. Nếu chạy offline qua file:// bị trình duyệt chặn fetch -> dùng ngay dữ liệu thật đã nhúng
+     */
+    async function loadStudentsForClass(className) {
+      if (!className) {
+        selectStudentEl.innerHTML = `<option value="">-- Chọn lớp trước để mở danh sách --</option>`;
+        selectStudentEl.disabled = true;
+        rosterStatusTextEl.innerHTML = `<strong>📊 Nạp danh sách tự động:</strong> Khi chọn lớp (<code>12A3</code>, <code>12A9</code>, <code>12A14</code>), hệ thống tự động đọc danh sách từ file Excel cùng thư mục hoặc dữ liệu chuẩn tích hợp sẵn.`;
+        return;
+      }
+
+      selectStudentEl.disabled = true;
+      selectStudentEl.innerHTML = `<option value="">⏳ Đang đọc danh sách lớp ${className}...</option>`;
+
+      // Nếu đã có trong cache thì dùng ngay
+      if (loadedRosterCache[className] && loadedRosterCache[className].length > 0) {
+        renderStudentOptions(className, loadedRosterCache[className], loadedRosterCache[className].sourceLabel);
+        return;
+      }
+
+      const candidateFiles = [`./${className}.xlsx`, `./${className.toLowerCase()}.xlsx`];
+
+      for (const fileUrl of candidateFiles) {
+        try {
+          const response = await fetch(fileUrl, { cache: "no-store" });
+          if (response.ok) {
+            const buf = await response.arrayBuffer();
+            const parsedList = parseExcelArrayBuffer(buf);
+            if (parsedList.length > 0) {
+              parsedList.sourceLabel = `file Excel cùng thư mục (${className}.xlsx)`;
+              loadedRosterCache[className] = parsedList;
+              renderStudentOptions(className, parsedList, parsedList.sourceLabel);
+              return;
+            }
+          }
+        } catch (err) {
+          // Chạy trực tiếp file:// sẽ rơi vào fallback dữ liệu Excel thật nhúng sẵn bên dưới
+        }
+      }
+
+      // Sử dụng ngay danh sách thật 100% trích xuất từ 3 file Excel đã nhúng
+      const embeddedList = formatEmbeddedList(className);
+      embeddedList.sourceLabel = `dữ liệu Excel chuẩn tích hợp sẵn (${className}.xlsx)`;
+      loadedRosterCache[className] = embeddedList;
+      renderStudentOptions(className, embeddedList, embeddedList.sourceLabel);
+    }
+
+    function renderStudentOptions(className, students, sourceLabel) {
+      selectStudentEl.innerHTML = "";
+      const defaultOpt = document.createElement("option");
+      defaultOpt.value = "";
+      defaultOpt.textContent = `-- Chọn họ và tên (${students.length} học sinh) --`;
+      selectStudentEl.appendChild(defaultOpt);
+
+      students.forEach(st => {
+        const opt = document.createElement("option");
+        opt.value = st.label;
+        opt.textContent = st.label;
+        selectStudentEl.appendChild(opt);
+      });
+
+      selectStudentEl.disabled = false;
+      rosterStatusTextEl.innerHTML = `✅ <strong>Lớp ${className}:</strong> Đã nạp đầy đủ <strong>${students.length} học sinh</strong> từ <em>${sourceLabel}</em>.`;
+    }
+
+    selectClassEl.addEventListener("change", (e) => {
+      appState.selectedClass = e.target.value;
+      appState.selectedStudent = "";
+      appState.selectedStudentObj = null;
+      loadStudentsForClass(appState.selectedClass);
+    });
+
+    selectStudentEl.addEventListener("change", (e) => {
+      appState.selectedStudent = e.target.value;
+      const cls = appState.selectedClass;
+      if (cls && loadedRosterCache[cls]) {
+        appState.selectedStudentObj = loadedRosterCache[cls].find(s => s.label === e.target.value) || null;
+      }
+    });
+
+    // ----------------------------------------------------------------------------
+    // 6. CHỌN ĐỀ THI (ĐỀ SỐ 1 HOẶC ĐỀ SỐ 2)
+    // ----------------------------------------------------------------------------
+    document.querySelectorAll(".exam-option").forEach(card => {
+      card.addEventListener("click", () => {
+        document.querySelectorAll(".exam-option").forEach(c => c.classList.remove("selected"));
+        card.classList.add("selected");
+        appState.selectedExam = parseInt(card.getAttribute("data-exam"), 10);
+      });
+    });
+
+    // ----------------------------------------------------------------------------
+    // 7. THANH CÔNG CỤ GỢI Ý CÂU LỆNH BẤM NHANH (QUICK-INSERT)
+    // ----------------------------------------------------------------------------
+    const ansQ1El = document.getElementById("ansQ1");
+    const ansQ2El = document.getElementById("ansQ2");
+
+    function insertTextAtCursor(textarea, textToInsert, cursorOffset = 0) {
+      textarea.focus();
+      const start = textarea.selectionStart ?? textarea.value.length;
+      const end = textarea.selectionEnd ?? textarea.value.length;
+      const before = textarea.value.substring(0, start);
+      const after = textarea.value.substring(end);
+
+      textarea.value = before + textToInsert + after;
+      const newCursorPos = start + textToInsert.length + cursorOffset;
+      textarea.setSelectionRange(newCursorPos, newCursorPos);
+    }
+
+    function backspaceAtCursor(textarea) {
+      textarea.focus();
+      const start = textarea.selectionStart ?? textarea.value.length;
+      const end = textarea.selectionEnd ?? textarea.value.length;
+      if (start !== end) {
+        textarea.value = textarea.value.substring(0, start) + textarea.value.substring(end);
+        textarea.setSelectionRange(start, start);
+      } else if (start > 0) {
+        textarea.value = textarea.value.substring(0, start - 1) + textarea.value.substring(end);
+        textarea.setSelectionRange(start - 1, start - 1);
+      }
+    }
+
+    document.addEventListener("click", (e) => {
+      const btn = e.target.closest(".chip-btn");
+      if (!btn) return;
+
+      const targetId = btn.getAttribute("data-target");
+      const targetTa = document.getElementById(targetId);
+      if (!targetTa) return;
+
+      const action = btn.getAttribute("data-action");
+      if (action === "clear") {
+        targetTa.value = "";
+        targetTa.focus();
+        return;
+      }
+      if (action === "backspace") {
+        backspaceAtCursor(targetTa);
+        return;
+      }
+      if (action === "newline") {
+        insertTextAtCursor(targetTa, targetId === "ansQ2" ? "\n  " : "\n", 0);
+        return;
+      }
+
+      const rawInsert = btn.getAttribute("data-insert");
+      if (rawInsert !== null) {
+        const formattedText = rawInsert.replace(/\\n/g, "\n");
+        const offset = parseInt(btn.getAttribute("data-cursor-offset") || "0", 10);
+        insertTextAtCursor(targetTa, formattedText, offset);
+      }
+    });
+
+    // ----------------------------------------------------------------------------
+    // 8. HỆ THỐNG CHỐNG GIAN LẬN, CHỐNG SAO CHÉP DÁN & CHỐNG CHUYỂN TRANG
+    // ----------------------------------------------------------------------------
+    ["paste", "drop", "dragover", "copy", "cut"].forEach(evtName => {
+      document.addEventListener(evtName, (e) => {
+        if (appState.isExamActive && !appState.isSubmitted) {
+          e.preventDefault();
+          if (evtName !== "dragover") {
+            showToast(`🚫 Hành động ${evtName.toUpperCase()} bị khóa trong lúc kiểm tra!`, true);
+          }
+        }
+      }, true);
+    });
+
+    document.addEventListener("contextmenu", (e) => {
+      if (appState.isExamActive && !appState.isSubmitted) {
+        e.preventDefault();
+        showToast("🚫 Không được sử dụng chuột phải trong giờ kiểm tra!", true);
+      }
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (!appState.isExamActive || appState.isSubmitted) return;
+
+      const key = e.key.toLowerCase();
+      if (
+        e.key === "F12" ||
+        ((e.ctrlKey || e.metaKey) && ["v", "c", "x", "u", "s", "p"].includes(key)) ||
+        ((e.ctrlKey || e.metaKey) && e.shiftKey && ["i", "j", "c"].includes(key))
+      ) {
+        e.preventDefault();
+        showToast("🚫 Phím tắt này bị vô hiệu hóa để chống gian lận!", true);
+      }
+    });
+
+    function registerViolation(reasonText) {
+      if (!appState.isExamActive || appState.isSubmitted) return;
+
+      const now = Date.now();
+      if (now - appState.lastViolationTimestamp < 1500) return;
+      appState.lastViolationTimestamp = now;
+
+      appState.violations += 1;
+      playWarningBeep();
+
+      const badgeV = document.getElementById("badgeViolation");
+      badgeV.textContent = `⚠️ Vi phạm: ${appState.violations}/${appState.maxViolations}`;
+
+      if (appState.violations >= appState.maxViolations) {
+        finishAndGradeExam(`Tự động khóa & nộp bài do vi phạm rời trang đủ ${appState.maxViolations} lần!`);
+      } else {
+        showAlertModal(
+          `⚠️ CẢNH BÁO VI PHẠM LẦN ${appState.violations}/${appState.maxViolations}`,
+          `Hệ thống phát hiện em vừa <strong>${reasonText}</strong>.<br><br>Nếu tiếp tục rời khỏi màn hình làm bài đủ <strong>${appState.maxViolations} lần</strong>, bài thi sẽ bị khóa và chấm điểm tự động ngay lập tức!`,
+          "danger"
+        );
+      }
+    }
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        registerViolation("chuyển sang tab khác hoặc thu nhỏ trình duyệt");
+      }
+    });
+
+    window.addEventListener("blur", () => {
+      registerViolation("rời khỏi cửa sổ trình duyệt làm bài");
+    });
+
+    // ----------------------------------------------------------------------------
+    // 9. BẮT ĐẦU LÀM BÀI & ĐỒNG HỒ ĐẾM NGƯỢC 10 PHÚT
+    // ----------------------------------------------------------------------------
+    document.getElementById("btnStartExam").addEventListener("click", () => {
+      if (!appState.selectedClass) {
+        showAlertModal("Thiếu thông tin", "Vui lòng chọn <strong>Lớp học</strong> của em trước khi bắt đầu!", "danger");
+        return;
+      }
+      if (!appState.selectedStudent) {
+        showAlertModal("Thiếu thông tin", "Vui lòng chọn <strong>Họ và tên</strong> của em trong danh sách!", "danger");
+        return;
+      }
+
+      const exam = EXAM_DATA[appState.selectedExam];
+      document.getElementById("badgeExamCode").textContent = exam.code;
+      document.getElementById("displayStudentName").textContent = appState.selectedStudent;
+      document.getElementById("displayStudentClass").textContent = appState.selectedClass;
+
+      document.getElementById("q1HeaderTitle").textContent = exam.q1Title;
+      document.getElementById("q1PromptBox").innerHTML = exam.q1Html;
+      document.getElementById("q2HeaderTitle").textContent = exam.q2Title;
+      document.getElementById("q2PromptBox").innerHTML = exam.q2Html;
+
+      // Render các nút gợi ý nhanh cho Câu 1
+      const q1ChipsContainer = document.getElementById("q1QuickChips");
+      q1ChipsContainer.innerHTML = "";
+      exam.q1Chips.forEach(phrase => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "chip-btn chip-tag";
+        b.textContent = phrase.trim();
+        b.setAttribute("data-target", "ansQ1");
+        b.setAttribute("data-insert", phrase);
+        q1ChipsContainer.appendChild(b);
+      });
+
+      ansQ1El.value = "";
+      ansQ2El.value = "";
+      appState.isExamActive = true;
+      appState.isSubmitted = false;
+      appState.violations = 0;
+      appState.timeLeftSeconds = 10 * 60;
+      appState.startTime = new Date();
+
+      document.getElementById("badgeViolation").textContent = `⚠️ Vi phạm: 0/${appState.maxViolations}`;
+      document.getElementById("screenSetup").classList.add("hidden");
+      document.getElementById("screenExam").classList.remove("hidden");
+      document.getElementById("examStatusBar").style.display = "flex";
+
+      try {
+        if (document.documentElement.requestFullscreen) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        }
+      } catch (e) {}
+
+      startCountdownTimer();
+    });
+
+    function startCountdownTimer() {
+      const timerBadge = document.getElementById("badgeTimer");
+      clearInterval(appState.timerInterval);
+
+      const updateDisplay = () => {
+        const mins = Math.floor(appState.timeLeftSeconds / 60);
+        const secs = appState.timeLeftSeconds % 60;
+        timerBadge.textContent = `⏱ ${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+        if (appState.timeLeftSeconds <= 60) {
+          timerBadge.classList.add("danger");
+        } else {
+          timerBadge.classList.remove("danger");
+        }
+      };
+
+      updateDisplay();
+      appState.timerInterval = setInterval(() => {
+        appState.timeLeftSeconds -= 1;
+        updateDisplay();
+
+        if (appState.timeLeftSeconds <= 0) {
+          clearInterval(appState.timerInterval);
+          finishAndGradeExam("Hết thời gian 10 phút làm bài (Tự động thu bài)");
+        }
+      }, 1000);
+    }
+
+    // ----------------------------------------------------------------------------
+    // 10. BỘ MÁY CHẤM ĐIỂM TỰ ĐỘNG CHUẨN BAREM (AUTO-GRADING ENGINE)
+    // ----------------------------------------------------------------------------
+    function extractCssRuleBlock(code, selectorRegex) {
+      const match = code.match(selectorRegex);
+      return match ? match[1] : null;
+    }
+
+    function gradeStudentSubmission(examNum, rawQ1, rawQ2) {
+      const rubricItems = [];
+      let totalScore = 0;
+
+      const normQ1 = removeVietnameseTones(rawQ1).replace(/\s+/g, " ").trim();
+      const cleanQ2 = rawQ2.replace(/\/\*[\s\S]*?\*\//g, "").trim();
+      let q1Score = 0;
+      let q2Score = 0;
+
+      // ========================================================================
+      // CHẤM CÂU 1 (1,0 ĐIỂM)
+      // ========================================================================
+      if (examNum === 1) {
+        const hasRed = /\b(do|red)\b/.test(normQ1);
+        const p1_1 = hasRed ? 0.5 : 0;
+        q1Score += p1_1;
+        rubricItems.push({
+          criterion: "Câu 1.1 – Xác định màu chữ <p> (0,5đ)",
+          earned: p1_1,
+          max: 0.5,
+          comment: hasRed
+            ? "Đạt: Xác định đúng đoạn văn <p> hiển thị màu đỏ (red)."
+            : "Chưa đạt: Cần nêu rõ đoạn văn <p> hiển thị màu đỏ (red)."
+        });
+
+        const hasNoUnderline = /(khong|ko)\s*(bi\s*)?(gach\s*chan|underline)/.test(normQ1);
+        const hasNoInherit = /(text-decoration|gach\s*chan).*?(khong|ko).*?(ke\s*thua|di\s*truyen)/.test(normQ1) ||
+                             /(khong|ko)\s*(co\s*)?(tinh\s*)?ke\s*thua/.test(normQ1);
+        const p1_2a = hasNoUnderline ? 0.25 : 0;
+        const p1_2b = hasNoInherit ? 0.25 : 0;
+        q1Score += (p1_2a + p1_2b);
+
+        const cmt1_2 = [];
+        cmt1_2.push(hasNoUnderline ? "Đúng ý không bị gạch chân (+0,25đ)." : "Thiếu ý: <p> KHÔNG bị gạch chân (-0,25đ).");
+        cmt1_2.push(hasNoInherit ? "Giải thích đúng do text-decoration không có tính kế thừa (+0,25đ)." : "Thiếu giải thích: vì thuộc tính text-decoration không có tính kế thừa (-0,25đ).");
+
+        rubricItems.push({
+          criterion: "Câu 1.2 – Gạch chân & Giải thích (0,5đ)",
+          earned: p1_2a + p1_2b,
+          max: 0.5,
+          comment: cmt1_2.join(" ")
+        });
+      } else {
+        // ĐỀ SỐ 2 - CÂU 1
+        const hasRed = /\b(do|red)\b/.test(normQ1);
+        const hasImportant = /!important|uu\s*tien\s*cao\s*nhat|do\s*uu\s*tien/.test(normQ1);
+        const p1_1 = (hasRed ? 0.25 : 0) + (hasImportant ? 0.25 : 0);
+        q1Score += p1_1;
+
+        rubricItems.push({
+          criterion: "Câu 1.1 – Màu chữ <h1> & Nguyên nhân (0,5đ)",
+          earned: p1_1,
+          max: 0.5,
+          comment: `${hasRed ? "Đúng màu chữ đỏ (red) (+0,25đ)." : "Thiếu màu chữ đỏ (red) (-0,25đ)."} ${hasImportant ? "Giải thích đúng do !important ưu tiên cao nhất (+0,25đ)." : "Thiếu giải thích do !important ưu tiên cao nhất (-0,25đ)."}`
+        });
+
+        const hasLeft = /\b(trai|left)\b/.test(normQ1);
+        const hasInheritAlign = /ke\s*thua|text-align|quy\s*tac\s*truoc|khong\s*bi\s*ghi\s*de/.test(normQ1);
+        const p1_2 = (hasLeft ? 0.25 : 0) + (hasInheritAlign ? 0.25 : 0);
+        q1Score += p1_2;
+
+        rubricItems.push({
+          criterion: "Câu 1.2 – Căn lề <h1> & Nguyên nhân (0,5đ)",
+          earned: p1_2,
+          max: 0.5,
+          comment: `${hasLeft ? "Đúng căn lề trái (left) (+0,25đ)." : "Thiếu căn lề trái (left) (-0,25đ)."} ${hasInheritAlign ? "Giải thích đúng do kế thừa thuộc tính text-align (+0,25đ)." : "Thiếu giải thích do kế thừa thuộc tính text-align (-0,25đ)."}`
+        });
+      }
+
+      // ========================================================================
+      // CHẤM CÂU 2 (2,0 ĐIỂM) - CÚ PHÁP CHUNG (0,5Đ)
+      // ========================================================================
+      const hasOpenStyle = /<style\b[^>]*>/i.test(cleanQ2);
+      const hasCloseStyle = /<\/style\s*>/i.test(cleanQ2);
+      const pStyleTag = (hasOpenStyle && hasCloseStyle) ? 0.25 : 0;
+
+      const openBraces = (cleanQ2.match(/\{/g) || []).length;
+      const closeBraces = (cleanQ2.match(/\}/g) || []).length;
+      const hasColonAndSemi = cleanQ2.includes(":") && cleanQ2.includes(";");
+      const pBracesSyntax = (openBraces >= 2 && openBraces === closeBraces && hasColonAndSemi) ? 0.25 : 0;
+
+      q2Score += (pStyleTag + pBracesSyntax);
+      rubricItems.push({
+        criterion: "Câu 2.1 – Cú pháp thẻ <style> & Dấu { } ; (0,5đ)",
+        earned: pStyleTag + pBracesSyntax,
+        max: 0.5,
+        comment: `${pStyleTag > 0 ? "Đặt đúng trong cặp thẻ <style>...</style> (+0,25đ)." : "Thiếu cặp thẻ mở/đóng <style>...</style> (-0,25đ)."} ${pBracesSyntax > 0 ? "Cặp ngoặc nhọn { } và dấu : ; hợp lệ (+0,25đ)." : "Lỗi thiếu/lệch dấu ngoặc nhọn { } hoặc dấu chấm phẩy ; (-0,25đ)."}`
+      });
+
+      let innerCss = cleanQ2;
+      const styleInnerMatch = cleanQ2.match(/<style\b[^>]*>([\s\S]*?)<\/style\s*>/i);
+      if (styleInnerMatch) {
+        innerCss = styleInnerMatch[1];
+      }
+
+      if (examNum === 1) {
+        // ĐỀ SỐ 1 - CÂU 2.2: Tiêu đề h1 (0,75đ)
+        const h1Block = extractCssRuleBlock(innerCss, /(?:^|\}|\s)h1\s*\{([^}]*)\}/i);
+        let pH1 = 0;
+        const cmtH1 = [];
+
+        if (!h1Block) {
+          cmtH1.push("Không tìm thấy bộ chọn thẻ h1 { ... } (-0,75đ).");
+        } else {
+          if (/text-align\s*:\s*center\s*;/i.test(h1Block)) {
+            pH1 += 0.25;
+            cmtH1.push("Căn giữa text-align: center (+0,25đ).");
+          } else {
+            cmtH1.push("Sai/thiếu text-align: center; (-0,25đ).");
+          }
+
+          if (/font-family\s*:\s*["']Times New Roman["']\s*,\s*serif\s*;/i.test(h1Block)) {
+            pH1 += 0.25;
+            cmtH1.push('Phông chữ "Times New Roman", serif chuẩn xác (+0,25đ).');
+          } else if (/font-family\s*:\s*Times New Roman\s*,\s*serif/i.test(h1Block)) {
+            cmtH1.push('Lỗi: Thiếu dấu nháy kép "..." bao quanh tên phông "Times New Roman" (-0,25đ).');
+          } else {
+            cmtH1.push('Sai/thiếu font-family: "Times New Roman", serif; (-0,25đ).');
+          }
+
+          if (/color\s*:\s*navy\s*;/i.test(h1Block)) {
+            pH1 += 0.25;
+            cmtH1.push("Màu chữ color: navy (+0,25đ).");
+          } else {
+            cmtH1.push("Sai/thiếu color: navy; (-0,25đ).");
+          }
+        }
+        q2Score += pH1;
+        rubricItems.push({
+          criterion: "Câu 2.2 – Định dạng tiêu đề <h1> (0,75đ)",
+          earned: pH1,
+          max: 0.75,
+          comment: cmtH1.join(" ")
+        });
+
+        // ĐỀ SỐ 1 - CÂU 2.3: Đoạn văn p (0,75đ)
+        const pBlock = extractCssRuleBlock(innerCss, /(?:^|\}|\s)p\s*\{([^}]*)\}/i);
+        let pPara = 0;
+        const cmtPara = [];
+
+        if (!pBlock) {
+          cmtPara.push("Không tìm thấy bộ chọn thẻ p { ... } (-0,75đ).");
+        } else {
+          if (/font-size\s*:\s*16px\s*;/i.test(pBlock)) {
+            pPara += 0.25;
+            cmtPara.push("Cỡ chữ font-size: 16px (+0,25đ).");
+          } else {
+            cmtPara.push("Sai/thiếu font-size: 16px; (-0,25đ).");
+          }
+
+          if (/line-height\s*:\s*1\.5\s*;/i.test(pBlock)) {
+            pPara += 0.25;
+            cmtPara.push("Khoảng cách dòng line-height: 1.5 (+0,25đ).");
+          } else {
+            cmtPara.push("Sai/thiếu line-height: 1.5; (-0,25đ).");
+          }
+
+          if (/text-indent\s*:\s*20px\s*;/i.test(pBlock)) {
+            pPara += 0.25;
+            cmtPara.push("Thụt lề đầu dòng text-indent: 20px (+0,25đ).");
+          } else {
+            cmtPara.push("Sai/thiếu text-indent: 20px; (-0,25đ).");
+          }
+        }
+        q2Score += pPara;
+        rubricItems.push({
+          criterion: "Câu 2.3 – Định dạng đoạn văn <p> (0,75đ)",
+          earned: pPara,
+          max: 0.75,
+          comment: cmtPara.join(" ")
+        });
+      } else {
+        // ĐỀ SỐ 2 - CÂU 2.2: Tiêu đề h2 (0,75đ)
+        const h2Block = extractCssRuleBlock(innerCss, /(?:^|\}|\s)h2\s*\{([^}]*)\}/i);
+        let pH2 = 0;
+        const cmtH2 = [];
+
+        if (!h2Block) {
+          cmtH2.push("Không tìm thấy bộ chọn thẻ h2 { ... } (-0,75đ).");
+        } else {
+          if (/text-align\s*:\s*left\s*;/i.test(h2Block)) {
+            pH2 += 0.25;
+            cmtH2.push("Căn lề trái text-align: left (+0,25đ).");
+          } else {
+            cmtH2.push("Sai/thiếu text-align: left; (-0,25đ).");
+          }
+
+          if (/font-family\s*:\s*["']Segoe UI["']\s*,\s*sans-serif\s*;/i.test(h2Block)) {
+            pH2 += 0.25;
+            cmtH2.push('Phông chữ "Segoe UI", sans-serif chuẩn xác (+0,25đ).');
+          } else if (/font-family\s*:\s*Segoe UI\s*,\s*sans-serif/i.test(h2Block)) {
+            cmtH2.push('Lỗi: Thiếu dấu nháy kép "..." bao quanh tên phông "Segoe UI" (-0,25đ).');
+          } else {
+            cmtH2.push('Sai/thiếu font-family: "Segoe UI", sans-serif; (-0,25đ).');
+          }
+
+          if (/color\s*:\s*darkred\s*;/i.test(h2Block)) {
+            pH2 += 0.25;
+            cmtH2.push("Màu chữ color: darkred (+0,25đ).");
+          } else {
+            cmtH2.push("Sai/thiếu color: darkred; (-0,25đ).");
+          }
+        }
+        q2Score += pH2;
+        rubricItems.push({
+          criterion: "Câu 2.2 – Định dạng tiêu đề <h2> (0,75đ)",
+          earned: pH2,
+          max: 0.75,
+          comment: cmtH2.join(" ")
+        });
+
+        // ĐỀ SỐ 2 - CÂU 2.3: Lớp đoạn văn .doan-van (0,75đ)
+        const dotClassBlock = extractCssRuleBlock(innerCss, /(?:^|\}|\s)\.doan-van\s*\{([^}]*)\}/i);
+        const noDotClassBlock = !dotClassBlock
+          ? extractCssRuleBlock(innerCss, /(?:^|\}|\s)doan-van\s*\{([^}]*)\}/i)
+          : null;
+
+        let pClass = 0;
+        const cmtClass = [];
+        const activeClassBlock = dotClassBlock || noDotClassBlock;
+
+        if (!activeClassBlock) {
+          cmtClass.push("Không tìm thấy bộ chọn lớp .doan-van { ... } (-0,75đ).");
+        } else {
+          if (noDotClassBlock) {
+            cmtClass.push("Lỗi cú pháp: Viết thiếu dấu chấm (.) ở đầu tên lớp .doan-van (-0,25đ).");
+          }
+
+          if (/font-size\s*:\s*15px\s*;/i.test(activeClassBlock)) {
+            pClass += 0.25;
+            cmtClass.push("Cỡ chữ font-size: 15px (+0,25đ).");
+          } else {
+            cmtClass.push("Sai/thiếu font-size: 15px; (-0,25đ).");
+          }
+
+          if (/font-style\s*:\s*italic\s*;/i.test(activeClassBlock)) {
+            pClass += 0.25;
+            cmtClass.push("In nghiêng font-style: italic (+0,25đ).");
+          } else {
+            cmtClass.push("Sai/thiếu font-style: italic; (-0,25đ).");
+          }
+
+          if (/text-indent\s*:\s*25px\s*;/i.test(activeClassBlock)) {
+            pClass += 0.25;
+            cmtClass.push("Thụt lề đầu dòng text-indent: 25px (+0,25đ).");
+          } else {
+            cmtClass.push("Sai/thiếu text-indent: 25px; (-0,25đ).");
+          }
+
+          if (noDotClassBlock) {
+            pClass = Math.max(0, pClass - 0.25);
+          }
+        }
+        q2Score += pClass;
+        rubricItems.push({
+          criterion: "Câu 2.3 – Định dạng lớp .doan-van (0,75đ)",
+          earned: pClass,
+          max: 0.75,
+          comment: cmtClass.join(" ")
+        });
+      }
+
+      q1Score = Math.round(q1Score * 100) / 100;
+      q2Score = Math.round(q2Score * 100) / 100;
+      totalScore = Math.round((q1Score + q2Score) * 100) / 100;
+
+      return {
+        q1Score,
+        q2Score,
+        totalScore,
+        rubricItems
+      };
+    }
+
+    // ----------------------------------------------------------------------------
+    // 11. NỘP BÀI, HIỂN THỊ PHIẾU ĐIỂM & XUẤT FILE KẾT QUẢ (.XLSX / .TXT)
+    // ----------------------------------------------------------------------------
+    document.getElementById("btnSubmitExam").addEventListener("click", () => {
+      showConfirmModal(
+        "Xác nhận nộp bài kiểm tra?",
+        "Sau khi nộp bài, em sẽ không thể chỉnh sửa nội dung và hệ thống sẽ chấm điểm ngay lập tức.",
+        () => finishAndGradeExam("Học sinh chủ động nộp bài")
+      );
+    });
+
+    function finishAndGradeExam(submitReason) {
+      if (appState.isSubmitted) return;
+      appState.isSubmitted = true;
+      appState.isExamActive = false;
+      appState.endTime = new Date();
+      clearInterval(appState.timerInterval);
+
+      try {
+        if (document.fullscreenElement && document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        }
+      } catch (e) {}
+
+      const q1Val = ansQ1El.value.trim();
+      const q2Val = ansQ2El.value.trim();
+      const gradeResult = gradeStudentSubmission(appState.selectedExam, q1Val, q2Val);
+
+      const elapsedSec = Math.max(1, Math.round((appState.endTime - appState.startTime) / 1000));
+      const elapsedStr = `${Math.floor(elapsedSec / 60)} phút ${elapsedSec % 60} giây`;
+
+      appState.latestGradeResult = {
+        stt: appState.selectedStudentObj ? appState.selectedStudentObj.stt : "",
+        rawName: appState.selectedStudentObj ? appState.selectedStudentObj.name : appState.selectedStudent,
+        studentName: appState.selectedStudent,
+        className: appState.selectedClass,
+        examCode: EXAM_DATA[appState.selectedExam].code,
+        submitReason,
+        elapsedStr,
+        violations: appState.violations,
+        timestamp: appState.endTime.toLocaleString("vi-VN"),
+        q1Text: q1Val || "(Bỏ trống)",
+        q2Text: q2Val || "(Bỏ trống)",
+        ...gradeResult
+      };
+
+      renderResultScreen(appState.latestGradeResult);
+    }
+
+    function renderResultScreen(res) {
+      document.getElementById("screenExam").classList.add("hidden");
+      document.getElementById("examStatusBar").style.display = "none";
+      document.getElementById("screenResult").classList.remove("hidden");
+
+      const reasonEl = document.getElementById("resSubmitReason");
+      reasonEl.textContent = res.submitReason;
+      reasonEl.style.color = res.violations >= appState.maxViolations ? "var(--danger)" : "var(--success)";
+
+      document.getElementById("resStudentInfo").textContent =
+        `Học sinh: ${res.studentName} | Lớp: ${res.className} | ${res.examCode}`;
+      document.getElementById("resMetaInfo").textContent =
+        `Thời điểm nộp: ${res.timestamp} | Thời gian làm: ${res.elapsedStr} | Số lần cảnh báo rời trang: ${res.violations}/${appState.maxViolations}`;
+      document.getElementById("resScore3").textContent = `${res.totalScore.toFixed(2).replace(".", ",")} / 3,00 điểm`;
+      document.getElementById("resScoreQ1").textContent = `${res.q1Score.toFixed(2).replace(".", ",")} / 1,00đ`;
+      document.getElementById("resScoreQ2").textContent = `${res.q2Score.toFixed(2).replace(".", ",")} / 2,00đ`;
+
+      const tbody = document.getElementById("rubricTableBody");
+      tbody.innerHTML = "";
+      res.rubricItems.forEach(item => {
+        const tr = document.createElement("tr");
+        let cls = "point-zero";
+        if (item.earned === item.max) cls = "point-ok";
+        else if (item.earned > 0) cls = "point-partial";
+
+        tr.innerHTML = `
+          <td><strong>${item.criterion}</strong></td>
+          <td class="${cls}">${item.earned.toFixed(2)} / ${item.max.toFixed(2)}</td>
+          <td>${item.comment}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById("reviewQ1").textContent = res.q1Text;
+      document.getElementById("reviewQ2").textContent = res.q2Text;
+    }
+
+    // Xuất kết quả ra file Excel (.xlsx) bằng SheetJS
+    document.getElementById("btnDownloadXlsx").addEventListener("click", () => {
+      const r = appState.latestGradeResult;
+      if (!r) return;
+
+      if (typeof XLSX === "undefined") {
+        showAlertModal("Thông báo", "Thư viện xuất Excel chưa sẵn sàng, vui lòng dùng nút Tải biên bản kết quả (.TXT).", "danger");
+        return;
+      }
+
+      const summaryRows = [
+        {
+          "STT": r.stt,
+          "Lớp": r.className,
+          "Họ và tên": r.rawName,
+          "Mã đề": r.examCode,
+          "Điểm Câu 1 (Thang 1,0)": r.q1Score,
+          "Điểm Câu 2 (Thang 2,0)": r.q2Score,
+          "Tổng điểm (Thang 3,0)": r.totalScore,
+          "Vi phạm rời trang": r.violations,
+          "Thời gian làm bài": r.elapsedStr,
+          "Thời điểm nộp": r.timestamp,
+          "Trạng thái nộp": r.submitReason,
+          "Bài làm Câu 1": r.q1Text,
+          "Bài làm Câu 2": r.q2Text
+        }
+      ];
+
+      const detailRows = r.rubricItems.map(item => ({
+        "Tiêu chí đánh giá": item.criterion,
+        "Điểm đạt": item.earned,
+        "Điểm tối đa": item.max,
+        "Nhận xét chi tiết": item.comment
+      }));
+
+      const wb = XLSX.utils.book_new();
+      const ws1 = XLSX.utils.json_to_sheet(summaryRows);
+      const ws2 = XLSX.utils.json_to_sheet(detailRows);
+      XLSX.utils.book_append_sheet(wb, ws1, "KetQua_TongHop");
+      XLSX.utils.book_append_sheet(wb, ws2, "ChiTiet_Barem");
+
+      const safeName = removeVietnameseTones(r.rawName).replace(/\s+/g, "_");
+      XLSX.writeFile(wb, `KetQua_${r.className}_STT${r.stt}_${safeName}.xlsx`);
+    });
+
+    // Xuất file TXT biên bản kết quả
+    document.getElementById("btnDownloadTxt").addEventListener("click", () => {
+      const r = appState.latestGradeResult;
+      if (!r) return;
+
+      const lines = [
+        "====================================================================",
+        "BIÊN BẢN KẾT QUẢ KIỂM TRA THƯỜNG XUYÊN (TỰ LUẬN) - TIN HỌC 12",
+        "Giáo viên: Nguyễn Hoàng Hải Đăng - Trường THPT Bình Tân",
+        "====================================================================",
+        `Họ và tên học sinh : ${r.studentName}`,
+        `Lớp               : ${r.className}`,
+        `Mã đề             : ${r.examCode}`,
+        `Thời điểm nộp bài : ${r.timestamp}`,
+        `Thời gian làm bài : ${r.elapsedStr}`,
+        `Trạng thái nộp    : ${r.submitReason}`,
+        `Vi phạm rời trang : ${r.violations}/${appState.maxViolations}`,
+        "--------------------------------------------------------------------",
+        `ĐIỂM CÂU 1 (THANG 1,0): ${r.q1Score.toFixed(2).replace(".", ",")} / 1,00 điểm`,
+        `ĐIỂM CÂU 2 (THANG 2,0): ${r.q2Score.toFixed(2).replace(".", ",")} / 2,00 điểm`,
+        `TỔNG ĐIỂM  (THANG 3,0): ${r.totalScore.toFixed(2).replace(".", ",")} / 3,00 điểm`,
+        "--------------------------------------------------------------------",
+        "CHI TIẾT CHẤM ĐIỂM THEO BAREM:",
+        ...r.rubricItems.map(i => `- ${i.criterion}: ${i.earned.toFixed(2)}/${i.max.toFixed(2)}đ -> ${i.comment}`),
+        "--------------------------------------------------------------------",
+        "BÀI LÀM CÂU 1:",
+        r.q1Text,
+        "--------------------------------------------------------------------",
+        "BÀI LÀM CÂU 2 (CSS):",
+        r.q2Text,
+        "===================================================================="
+      ];
+
+      const safeName = removeVietnameseTones(r.rawName).replace(/\s+/g, "_");
+      const blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `KetQua_${r.className}_STT${r.stt}_${safeName}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById("btnResetHome").addEventListener("click", () => {
+      document.getElementById("screenResult").classList.add("hidden");
+      document.getElementById("screenSetup").classList.remove("hidden");
+    });
+  </script>
+</body>
+</html>
